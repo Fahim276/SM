@@ -1,0 +1,369 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_NAME_LENGTH 100
+
+// Structure to hold product details
+struct node {
+    int ID;
+    char proName[MAX_NAME_LENGTH];
+    double prePrice;
+    int quantity;
+    struct node *next;
+};
+
+// Head of the linked list
+struct node *head = NULL;
+
+// Function Declarations
+int login();
+void addProduct();
+void deleteProduct();
+void modifyProduct();
+void applyDiscount();
+void buyProduct();
+void returnProduct();
+int display();
+void displayLine();
+void displayCentered(char *str);
+void displayMainMenu();
+void displayAdminMenu();
+void displayCustomerMenu();
+
+// Function to display a separator line
+void displayLine() {
+    printf("\n===========================================================\n");
+}
+
+// Function to display centered text
+void displayCentered(char *str) {
+    int len = strlen(str);
+    int space = (60 - len) / 2;
+    for (int i = 0; i < space; i++) {
+        printf(" ");
+    }
+    printf("%s\n", str);
+}
+
+// Function to display the main menu
+void displayMainMenu() {
+    displayLine();
+    displayCentered("Welcome to the Product Management System");
+    displayLine();
+    printf("\n1. Admin Login\n2. Customer Panel\n0. Exit\n");
+    displayLine();
+    printf("Enter your choice: ");
+}
+
+// Function to display the admin menu
+void displayAdminMenu() {
+    displayLine();
+    displayCentered("Admin Panel");
+    displayLine();
+    printf("1. Add Product\n");
+    printf("2. Display Products\n");
+    printf("3. Delete Product\n");
+    printf("4. Modify Product\n");
+    printf("5. Apply Discount to Product\n");
+    printf("6. Go Back to Main Menu\n");
+    displayLine();
+    printf("Enter your choice: ");
+}
+
+// Function to display the customer menu
+void displayCustomerMenu() {
+    displayLine();
+    displayCentered("Customer Panel");
+    displayLine();
+    printf("1. Display Products\n");
+    printf("2. Buy Product\n");
+    printf("3. Return Product\n");
+    printf("4. Go Back to Main Menu\n");
+    displayLine();
+    printf("Enter your choice: ");
+}
+
+// Function to login as admin
+int login() {
+    char username[15], password[15];
+    printf("Enter Username: ");
+    scanf("%s", username);
+    printf("Enter Password: ");
+    scanf("%s", password);
+
+    if (strcmp(username, "admin") == 0 && strcmp(password, "1234") == 0) {
+        printf("\nLogin successful!\n");
+        return 1; // Admin login successful
+    }
+    printf("\nInvalid login details.\n");
+    return 0; // Login failed
+}
+
+// Function to add a new product
+void addProduct() {
+    struct node *newProduct = (struct node *)malloc(sizeof(struct node));
+    if (!newProduct) {
+        printf("Memory allocation failed.\n");
+        return;
+    }
+
+    printf("\nEnter product ID: ");
+    scanf("%d", &newProduct->ID);
+    printf("Enter product name: ");
+    scanf(" %[^\n]%*c", newProduct->proName);
+    printf("Enter product price: ");
+    scanf("%lf", &newProduct->prePrice);
+    printf("Enter product quantity: ");
+    scanf("%d", &newProduct->quantity);
+
+    newProduct->next = NULL;
+
+    // Insert the new product in the sorted position
+    if (head == NULL || head->ID > newProduct->ID) {
+        newProduct->next = head;
+        head = newProduct;
+    } else {
+        struct node *current = head;
+        while (current->next != NULL && current->next->ID < newProduct->ID) {
+            current = current->next;
+        }
+        newProduct->next = current->next;
+        current->next = newProduct;
+    }
+
+    printf("\nProduct added successfully!\n");
+}
+
+// Function to delete a product by ID
+void deleteProduct() {
+    int id;
+    printf("\nEnter product ID to delete: ");
+    scanf("%d", &id);
+
+    struct node *current = head, *previous = NULL;
+
+    if (head != NULL && head->ID == id) {
+        current = head;
+        head = head->next;
+        free(current);
+        printf("\nProduct deleted successfully!\n");
+        return;
+    }
+
+    while (current != NULL && current->ID != id) {
+        previous = current;
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        printf("\nProduct not found!\n");
+        return;
+    }
+
+    previous->next = current->next;
+    free(current);
+    printf("\nProduct deleted successfully!\n");
+}
+
+// Function to modify product details
+void modifyProduct() {
+    int id;
+    printf("\nEnter product ID to modify: ");
+    scanf("%d", &id);
+
+    struct node *current = head;
+    while (current != NULL) {
+        if (current->ID == id) {
+            printf("\nEnter new product name: ");
+            scanf(" %[^\n]%*c", current->proName);
+            printf("Enter new product price: ");
+            scanf("%lf", &current->prePrice);
+            printf("Enter new product quantity: ");
+            scanf("%d", &current->quantity);
+            printf("\nProduct modified successfully!\n");
+            return;
+        }
+        current = current->next;
+    }
+
+    printf("\nProduct not found!\n");
+}
+
+// Function to apply a discount to a product
+void applyDiscount() {
+    int id;
+    double discount;
+    printf("\nEnter product ID to apply discount: ");
+    scanf("%d", &id);
+
+    printf("Enter discount percentage (e.g., 10 for 10%%): ");
+    scanf("%lf", &discount);
+
+    struct node *current = head;
+    while (current != NULL) {
+        if (current->ID == id) {
+            double discountAmount = (discount / 100) * current->prePrice;
+            current->prePrice -= discountAmount;  // Apply discount
+            printf("\nDiscount of %.2f%% applied! New price is %.2f.\n", discount, current->prePrice);
+            return;
+        }
+        current = current->next;
+    }
+
+    printf("\nProduct not found!\n");
+}
+
+// Function to display all products
+int display() {
+    struct node *current = head;
+    int count = 0;
+
+    displayLine();
+    printf("| %-5s | %-25s | %-10s | %-8s |\n", "ID", "Name", "Price", "Qty");
+    displayLine();
+
+    while (current != NULL) {
+        printf("| %-5d | %-25s | %-10.2f | %-8d |\n", current->ID, current->proName, current->prePrice, current->quantity);
+        current = current->next;
+        count++;
+    }
+
+    if (count == 0) {
+        printf("\nNo products available.\n");
+    }
+
+    displayLine();
+    return count;
+}
+
+// Function to handle buying products
+void buyProduct() {
+    int id, quantity;
+    printf("\nEnter product ID to buy: ");
+    scanf("%d", &id);
+
+    struct node *current = head;
+    while (current != NULL) {
+        if (current->ID == id) {
+            printf("Enter quantity to buy: ");
+            scanf("%d", &quantity);
+
+            if (current->quantity >= quantity) {
+                double totalPrice = current->prePrice * quantity;
+                current->quantity -= quantity;
+                printf("\nYou bought %d %s(s) for %.2f.\n", quantity, current->proName, totalPrice);
+                return;
+            } else {
+                printf("\nInsufficient stock! Only %d available.\n", current->quantity);
+                return;
+            }
+        }
+        current = current->next;
+    }
+
+    printf("\nProduct not found!\n");
+}
+
+// Function to handle product returns
+void returnProduct() {
+    int id, quantity;
+    printf("\nEnter product ID to return: ");
+    scanf("%d", &id);
+
+    struct node *current = head;
+    while (current != NULL) {
+        if (current->ID == id) {
+            printf("Enter quantity to return: ");
+            scanf("%d", &quantity);
+            current->quantity += quantity;
+            printf("\nYou returned %d %s(s).\n", quantity, current->proName);
+            return;
+        }
+        current = current->next;
+    }
+
+    printf("\nProduct not found!\n");
+}
+
+// Main function
+int main() {
+    int roleChoice;
+
+    while (1) {
+        displayMainMenu();
+        scanf("%d", &roleChoice);
+
+        switch (roleChoice) {
+            case 1: { // Admin Panel
+                if (login()) {
+                    int adminChoice;
+                    while (1) {
+                        displayAdminMenu();
+                        scanf("%d", &adminChoice);
+
+                        switch (adminChoice) {
+                            case 1:
+                                addProduct();
+                                break;
+                            case 2:
+                                display();
+                                break;
+                            case 3:
+                                deleteProduct();
+                                break;
+                            case 4:
+                                modifyProduct();
+                                break;
+                            case 5:
+                                applyDiscount();
+                                break;
+                            case 6: // Go Back to Main Menu
+                                printf("\nReturning to Main Menu...\n");
+                                break;
+                            default:
+                                printf("\nInvalid choice. Please try again.\n");
+                        }
+                        if (adminChoice == 6) break;
+                    }
+                } else {
+                    printf("\nLogin failed. Returning to Main Menu.\n");
+                }
+                break;
+            }
+            case 2: { // Customer Panel
+                int customerChoice;
+                while (1) {
+                    displayCustomerMenu();
+                    scanf("%d", &customerChoice);
+
+                    switch (customerChoice) {
+                        case 1:
+                            display();
+                            break;
+                        case 2:
+                            buyProduct();
+                            break;
+                        case 3:
+                            returnProduct();
+                            break;
+                        case 4:
+                            printf("\nReturning to Main Menu...\n");
+                            break;
+                        default:
+                            printf("\nInvalid choice. Please try again.\n");
+                    }
+                    if (customerChoice == 4) break;
+                }
+                break;
+            }
+            case 0:
+                printf("\nExiting system...\n");
+                exit(0);
+            default:
+                printf("\nInvalid choice. Please try again.\n");
+        }
+    }
+
+    return 0;
+}
